@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>eSupportLog Admin Panel</title>
+
+<style>
+
+body{
+font-family: Arial;
+background:#f4f4f4;
+margin:0;
+}
+
+header{
+background:#0077cc;
+padding:12px;
+display:flex;
+gap:10px;
+`}
+
+header button{
+padding:10px 18px;
+border:none;
+background:white;
+color:#0077cc;
+font-weight:bold;
+border-radius:5px;
+cursor:pointer;
+}
+
+header button:hover{
+background:#005fa3;
+color:white;
+}
+
+.container{
+max-width:800px;
+margin:40px auto;
+background:white;
+padding:25px;
+border-radius:8px;
+box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+h2{
+text-align:center;
+color:#0077cc;
+}
+
+form{
+display:flex;
+flex-direction:column;
+gap:10px;
+}
+
+input,select{
+padding:10px;
+border:1px solid #ccc;
+border-radius:5px;
+}
+
+button.submit{
+background:#0077cc;
+color:white;
+padding:10px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+section{
+display:none;
+}
+
+section.active{
+display:block;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+table,th,td{
+border:1px solid #ccc;
+}
+
+th,td{
+padding:8px;
+text-align:center;
+}
+
+.adminTag{
+
+</style>
+</head>
+
+<body>
+
+<header>
+<button onclick="show('home')">Home</button>
+<button onclick="show('register')">Register</button>
+<button onclick="show('login')">Login</button>
+</header>
+
+<div class="container">
+
+<section id="home" class="active">
+<h2>Welcome to eSupportLog</h2>
+<p align="center">Admin support management system</p>
+</section>
+
+<section id="register">
+<h2>User Register</h2>
+
+<form id="regForm">
+<input type="text" id="name" placeholder="Name" required>
+<input type="email" id="email" placeholder="Email" required>
+<input type="password" id="pass" placeholder="Password" required>
+
+<select id="role">
+<option value="user">User</option>
+<option value="admin">Admin</option>
+</select>
+
+<button class="submit">Register</button>
+</form>
+
+</section>
+
+<section id="login">
+
+<h2>Login</h2>
+
+<form id="loginForm">
+<input type="email" id="loginEmail" placeholder="Email" required>
+<input type="password" id="loginPass" placeholder="Password" required>
+<button class="submit">Login</button>
+</form>
+
+<p id="loginMsg"></p>
+
+</section>
+
+<section id="database">
+
+<h2>Database Log <span class="adminTag">(Admin Only)</span></h2>
+
+<table id="userTable">
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Role</th>
+</tr>
+</table>
+
+</section>
+
+<section id="duty">
+
+<h2>Duty Form</h2>
+
+<form id="dutyForm">
+
+<input type="text" id="dutyName" placeholder="Name">
+
+<input type="date" id="dateFrom">
+<input type="date" id="dateTo">
+
+<select id="day">
+<option>Sunday</option>
+<option>Monday</option>
+<option>Tuesday</option>
+<option>Wednesday</option>
+<option>Thursday</option>
+<option>Friday</option>
+<option>Saturday</option>
+</select>
+
+<select id="time">
+<option>7AM-3PM</option>
+<option>8AM-4PM</option>
+<option>10AM-6PM</option>
+<option>11AM-7PM</option>
+</select>
+
+<select id="holiday">
+<option>No</option>
+<option>Yes</option>
+</select>
+
+<button class="submit">Add Duty</button>
+
+</form>
+
+<table id="dutyTable">
+<tr>
+<th>Name</th>
+<th>Date From</th>
+<th>Date To</th>
+<th>Day</th>
+<th>Time</th>
+<th>Holiday</th>
+</tr>
+</table>
+
+</section>
+
+</div>
+
+<script>
+
+function show(id){
+document.querySelectorAll("section").forEach(s=>s.classList.remove("active"))
+document.getElementById(id).classList.add("active")
+}
+
+function logout(){
+localStorage.removeItem("login")
+alert("Logged out")
+show("home")
+}
+
+let users=JSON.parse(localStorage.getItem("users"))||[]
+
+document.getElementById("regForm").onsubmit=function(e){
+e.preventDefault()
+
+let u={
+name:name.value,
+email:email.value,
+pass:pass.value,
+role:role.value
+}
+
+users.push(u)
+
+localStorage.setItem("users",JSON.stringify(users))
+
+alert("User Registered")
+
+this.reset()
+
+updateUsers()
+}
+
+document.getElementById("loginForm").onsubmit=function(e){
+e.preventDefault()
+
+let user=users.find(u=>u.email==loginEmail.value && u.pass==loginPass.value)
+
+if(user){
+
+localStorage.setItem("login",JSON.stringify(user))
+
+alert("Welcome "+user.name)
+
+show("home")
+
+if(user.role!="admin"){
+alert("Database access only for Admin")
+}
+
+}else{
+loginMsg.innerText="Invalid login"
+}
+
+}
+
+function updateUsers(){
+
+let table=document.getElementById("userTable")
+
+table.innerHTML="<tr><th>Name</th><th>Email</th><th>Role</th></tr>"
+
+users.forEach(u=>{
+table.innerHTML+=`
+<tr>
+<td>${u.name}</td>
+<td>${u.email}</td>
+<td>${u.role}</td>
+</tr>
+`
+})
+
+}
+
+updateUsers()
+
+let duties=[]
+
+document.getElementById("dutyForm").onsubmit=function(e){
+e.preventDefault()
+
+let d={
+name:dutyName.value,
+from:dateFrom.value,
+to:dateTo.value,
+day:day.value,
+time:time.value,
+holiday:holiday.value
+}
+
+duties.push(d)
+
+updateDuty()
+
+}
+
+function updateDuty(){
+
+let table=document.getElementById("dutyTable")
+
+table.innerHTML="<tr><th>Name</th><th>Date From</th><th>Date To</th><th>Day</th><th>Time</th><th>Holiday</th></tr>"
+
+duties.forEach(d=>{
+table.innerHTML+=`
+<tr>
+<td>${d.name}</td>
+<td>${d.from}</td>
+<td>${d.to}</td>
+<td>${d.day}</td>
+<td>${d.time}</td>
+<td>${d.holiday}</td>
+</tr>
+`
+})
+
+}
+
+</script>
+
+</body>
+</html><button onclick="show('database')">Database Log</button>
+<button onclick="show('duty')">Duty Form</button>
+<button onclick="logout()">Logout</button>
+color:red;
+font-weight:bold;
+}
+
+#new file 
